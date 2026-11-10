@@ -177,3 +177,19 @@ SIMPLE_JWT = {
 }
 
 AUTH_USER_MODEL = "accounts.User"
+
+# Configurações dos cookies de autenticação
+
+AUTH_COOKIE = {
+    "NAME": "revezo_refresh",
+    "PATH": "/api/auth/",
+    "SECURE": not DEBUG,
+    "HTTPONLY": True,
+    "SAMESITE": "Lax",
+}
+
+# Configurações do cookie CSRF
+
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_HTTPONLY = False
