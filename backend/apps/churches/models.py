@@ -24,6 +24,10 @@ class Church(models.Model):
 
 
 class ChurchMembership(models.Model):
+    class Role(models.TextChoices):
+        MEMBER = "member", "Membro"
+        ADMIN = "admin", "Administrador de Igreja"
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -36,6 +40,13 @@ class ChurchMembership(models.Model):
         on_delete=models.PROTECT,
         related_name="memberships",
         verbose_name="Igreja",
+    )
+
+    role = models.CharField(
+        "Responsabilidade",
+        max_length=20,
+        choices=Role.choices,
+        default=Role.MEMBER,
     )
 
     is_active = models.BooleanField(

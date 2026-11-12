@@ -11,7 +11,7 @@ interface HeaderProps {
 
 export const Header = ({ onMenuToggle }: HeaderProps) => {
   const { theme, toggleTheme } = useTheme();
-  const { logout } = useAuth();
+  const { logout, user} = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -64,7 +64,7 @@ export const Header = ({ onMenuToggle }: HeaderProps) => {
         <button className="flex items-center gap-2 rounded-xl p-1.5 transition hover:bg-sidebar">
           <UserCircle size={28} className="text-primary" />
           <span className="hidden text-sm font-medium sm:block">
-            Minha conta
+            {user ? `${user.first_name} ${user.last_name}`.trim() : "Minha conta"}
           </span>
         </button>
 

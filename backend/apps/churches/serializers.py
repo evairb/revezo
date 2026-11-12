@@ -22,6 +22,17 @@ class ChurchSerializer(serializers.ModelSerializer):
             "updated_at",
         )
 
+    def get_fields(self):
+        fields = super().get_fields()
+
+        request = self.context.get("request")
+
+        if request and request.user.is_authenticated:
+            if not request.user.is_superuser:
+                fields["is_active"].read_only = True
+
+        return fields
+
 
 class ChurchMembershipSerializer(serializers.ModelSerializer):
     user_email = serializers.EmailField(
@@ -50,6 +61,7 @@ class ChurchMembershipSerializer(serializers.ModelSerializer):
             "user_email",
             "church",
             "church_name",
+            "role",
             "is_active",
             "joined_at",
         )
