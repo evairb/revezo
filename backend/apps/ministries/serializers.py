@@ -94,19 +94,19 @@ class MinistryMembershipSerializer(serializers.ModelSerializer):
             )
 
             if user and not user.is_active:
-                raise serializers.ValidationError({
-                    "user": "Não é possível vincular um usuário inativo."
-                })
+                raise serializers.ValidationError(
+                    {"user": "Não é possível vincular um usuário inativo."}
+                )
 
             if ministry and not ministry.is_active:
-                raise serializers.ValidationError({
-                    "ministry": "Não é possível utilizar um ministério inativo."
-                })
+                raise serializers.ValidationError(
+                    {"ministry": "Não é possível utilizar um ministério inativo."}
+                )
 
             if ministry and not ministry.church.is_active:
-                raise serializers.ValidationError({
-                    "ministry": "A igreja deste ministério está inativa."
-                })
+                raise serializers.ValidationError(
+                    {"ministry": "A igreja deste ministério está inativa."}
+                )
 
             return attrs
 
@@ -114,6 +114,20 @@ class MinistryMembershipSerializer(serializers.ModelSerializer):
         if not value.is_active:
             raise serializers.ValidationError(
                 "Não é possível vincular um usuário inativo."
+            )
+
+        return value
+
+    def validate_ministry(self, value):
+        if not value.is_active:
+            raise serializers.ValidationError(
+                "Não é possível vincular usuários a um ministério inativo."
+            )
+
+        if not value.church.is_active:
+            raise serializers.ValidationError(
+                """Não é possível vincular usuários a
+                um ministério de uma igreja inativa."""
             )
 
         return value
