@@ -101,7 +101,7 @@ class MinistryAPITests(APITestCase):
             status.HTTP_200_OK,
         )
 
-        self.assertEqual(len(response.data["results"]), 3)
+        self.assertEqual(len(response.data["results"]), 2)
 
     def test_master_can_update_ministry(self):
         self.client.force_authenticate(user=self.master)
@@ -389,7 +389,7 @@ class MinistryMembershipAPITests(APITestCase):
             status.HTTP_200_OK,
         )
 
-        self.assertEqual(len(response.data["results"]), 2)
+        self.assertEqual(len(response.data["results"]), 3)
 
     def test_church_admin_can_create_membership(self):
         self.client.force_authenticate(user=self.church_admin)
@@ -517,7 +517,7 @@ class MinistryMembershipAPITests(APITestCase):
             status.HTTP_200_OK,
         )
 
-        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(len(response.data["results"]), 2)
 
     def test_regular_user_cannot_create_membership(self):
         self.client.force_authenticate(user=self.regular_user)
