@@ -1,4 +1,3 @@
-
 from django.conf import settings
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
@@ -18,6 +17,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.accounts.serializers import RegisterSerializer
 from .serializers import UserSerializer
+from apps.churches.models import Church
+from apps.churches.serializers import MyChurchSerializer
 
 
 # Preparação do cookie CSRF
@@ -78,9 +79,7 @@ class RefreshTokenView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
-        serializer = TokenRefreshSerializer(
-            data={"refresh": refresh_token}
-        )
+        serializer = TokenRefreshSerializer(data={"refresh": refresh_token})
         serializer.is_valid(raise_exception=True)
 
         tokens = serializer.validated_data
@@ -141,3 +140,26 @@ class CurrentUserView(generics.RetrieveAPIView):
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
+
+
+class MyChurchesView(generics.ListAPIView):
+    serializer_class = MyChurchSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if user.is_superuser:
+            return Church.objects.filter(
+                is_active=True,
+            ).order_by("name")
+
+        return (
+            Church.objects.filter(
+                memberships__user=user,
+                memberships__is_activate=True,
+                is_active=True,
+            )
+            .distinct()
+            .order_by("name")
+        )

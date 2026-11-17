@@ -8,6 +8,7 @@ from .views import (
     LogoutView,
     CurrentUserView,
     RegisterView,
+    MyChurchesView
 )
 
 
@@ -26,4 +27,5 @@ urlpatterns = [
     ),
     path("me/", CurrentUserView.as_view(), name="current_user"),
     path("register/", RegisterView.as_view(), name="register"),
+    path("my-churches/", MyChurchesView.as_view(), name="my_churches"),
 ]

@@ -1,4 +1,3 @@
-
 from rest_framework import serializers
 
 from apps.accounts.models import User
@@ -45,13 +44,9 @@ class ChurchMembershipSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
-    user = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all()
-    )
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
-    church = serializers.PrimaryKeyRelatedField(
-        queryset=Church.objects.all()
-    )
+    church = serializers.PrimaryKeyRelatedField(queryset=Church.objects.all())
 
     class Meta:
         model = ChurchMembership
@@ -82,13 +77,39 @@ class ChurchMembershipSerializer(serializers.ModelSerializer):
         )
 
         if user and not user.is_active:
-            raise serializers.ValidationError({
-                "user": "Não é possível vincular um usuário inativo."
-            })
+            raise serializers.ValidationError(
+                {"user": "Não é possível vincular um usuário inativo."}
+            )
 
         if church and not church.is_active:
-            raise serializers.ValidationError({
-                "church": "Não é possível vincular a uma igreja inativa."
-            })
+            raise serializers.ValidationError(
+                {"church": "Não é possível vincular a uma igreja inativa."}
+            )
 
         return attrs
+
+
+class MyChurchSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Church
+        fields = [
+            "id",
+            "name",
+            "role",
+        ]
+
+    def get_role(self, church):
+        user = self.context["request"].user
+
+        if user.is_superuser:
+            return "master"
+
+        membership = ChurchMembership.objects.get(
+            user=user,
+            church=church,
+            is_active=True,
+        )
+
+        return membership.role

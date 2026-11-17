@@ -1,8 +1,8 @@
-
 from rest_framework.permissions import BasePermission
 
 from apps.churches.models import Church, ChurchMembership
 from apps.ministries.models import Ministry, MinistryMembership
+from apps.services.models import Service
 
 
 class IsSystemMaster(BasePermission):
@@ -14,9 +14,7 @@ class IsSystemMaster(BasePermission):
 
     def has_permission(self, request, view):
         return bool(
-            request.user
-            and request.user.is_authenticated
-            and request.user.is_superuser
+            request.user and request.user.is_authenticated and request.user.is_superuser
         )
 
 
@@ -28,10 +26,7 @@ class BaseAdministrativePermission(BasePermission):
     message = "Você não possui permissão administrativa para este recurso."
 
     def has_permission(self, request, view):
-        return bool(
-            request.user
-            and request.user.is_authenticated
-        )
+        return bool(request.user and request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
         if request.user.is_superuser:
@@ -41,8 +36,7 @@ class BaseAdministrativePermission(BasePermission):
 
     def has_scope_permission(self, user, obj):
         raise NotImplementedError(
-            "A classe especializada deve implementar "
-            "has_scope_permission()."
+            "A classe especializada deve implementar has_scope_permission()."
         )
 
     def is_church_admin(self, user, church):
@@ -85,6 +79,9 @@ class IsSystemMasterOrChurchAdmin(BaseAdministrativePermission):
         elif isinstance(obj, MinistryMembership):
             church = obj.ministry.church
 
+        elif isinstance(obj, Service):
+            church = obj.church
+
         else:
             return False
 
@@ -109,7 +106,6 @@ class IsSystemMasterOrMinistryAdmin(BaseAdministrativePermission):
         else:
             return False
 
-        return (
-            self.is_church_admin(user, ministry.church)
-            or self.is_ministry_admin(user, ministry)
+        return self.is_church_admin(user, ministry.church) or self.is_ministry_admin(
+            user, ministry
         )
