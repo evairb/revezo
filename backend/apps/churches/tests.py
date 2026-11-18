@@ -7,6 +7,7 @@ from rest_framework.test import APITestCase
 from django.urls import reverse
 
 from .models import Church, ChurchMembership
+from apps.ministries.models import Ministry, MinistryMembership
 
 
 User = get_user_model()
@@ -375,3 +376,236 @@ class ChurchMembershipAPITest(APITestCase):
         membership.refresh_from_db()
 
         self.assertFalse(membership.is_active)
+
+
+class ChurchUserSearchAPITest(APITestCase):
+    def setUp(self):
+        self.master = User.objects.create_superuser(
+            email="master@exemplo.com",
+            password="SenhaMaster123!",
+        )
+
+        self.admin = User.objects.create_user(
+            email="admin@exemplo.com",
+            password="SenhaAdmin123!",
+            first_name="Carlos",
+            last_name="Administrador",
+        )
+
+        self.ministry_admin = User.objects.create_user(
+            email="lider@exemplo.com",
+            password="SenhaLider123!",
+        )
+
+        self.regular_user = User.objects.create_user(
+            email="comum@exemplo.com",
+            password="SenhaUsuario123!",
+        )
+
+        self.available_user = User.objects.create_user(
+            email="joao@exemplo.com",
+            password="SenhaUsuario123!",
+            first_name="João",
+            last_name="Silva",
+        )
+
+        self.church = Church.objects.create(
+            name="Igreja Central",
+        )
+
+        self.another_church = Church.objects.create(
+            name="Igreja Secundária",
+        )
+
+        ChurchMembership.objects.create(
+            user=self.admin,
+            church=self.church,
+            role=ChurchMembership.Role.ADMIN,
+        )
+
+        ministry = Ministry.objects.create(
+            church=self.church,
+            name="Louvor",
+        )
+
+        MinistryMembership.objects.create(
+            user=self.ministry_admin,
+            ministry=ministry,
+            role=MinistryMembership.Role.ADMIN,
+        )
+
+        self.search_url = reverse(
+            "church-membership-search-users"
+        )
+
+    def search(self, user, church=None, email="joao"):
+        self.client.force_authenticate(user=user)
+
+        return self.client.get(
+            self.search_url,
+            {
+                "church": church or self.church.pk,
+                "email": email,
+            },
+        )
+
+    def test_master_can_search_users(self):
+        response = self.search(
+            self.master,
+            church=self.another_church.pk,
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+        )
+
+        self.assertEqual(len(response.data), 1)
+
+        self.assertEqual(
+            response.data[0]["email"],
+            "joao@exemplo.com",
+        )
+
+    def test_church_admin_can_search_users_in_own_church(self):
+        response = self.search(self.admin)
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+        )
+
+        self.assertEqual(len(response.data), 1)
+
+    def test_church_admin_cannot_search_another_church(self):
+        response = self.search(
+            self.admin,
+            church=self.another_church.pk,
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_403_FORBIDDEN,
+        )
+
+    def test_ministry_admin_cannot_search_users(self):
+        response = self.search(self.ministry_admin)
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_403_FORBIDDEN,
+        )
+
+    def test_regular_user_cannot_search_users(self):
+        response = self.search(self.regular_user)
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_403_FORBIDDEN,
+        )
+
+    def test_unauthenticated_user_cannot_search_users(self):
+        response = self.client.get(
+            self.search_url,
+            {
+                "church": self.church.pk,
+                "email": "joao",
+            },
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_401_UNAUTHORIZED,
+        )
+
+    def test_already_linked_user_is_not_returned(self):
+        ChurchMembership.objects.create(
+            user=self.available_user,
+            church=self.church,
+        )
+
+        response = self.search(self.admin)
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+        )
+
+        self.assertEqual(len(response.data), 0)
+
+    def test_inactive_membership_user_is_not_returned(self):
+        ChurchMembership.objects.create(
+            user=self.available_user,
+            church=self.church,
+            is_active=False,
+        )
+
+        response = self.search(self.admin)
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+        )
+
+        self.assertEqual(len(response.data), 0)
+
+    def test_inactive_user_is_not_returned(self):
+        self.available_user.is_active = False
+        self.available_user.save()
+
+        response = self.search(self.admin)
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+        )
+
+        self.assertEqual(len(response.data), 0)
+
+    def test_search_with_less_than_three_characters_returns_empty(self):
+        response = self.search(
+            self.admin,
+            email="jo",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+        )
+
+        self.assertEqual(len(response.data), 0)
+
+    def test_inactive_church_cannot_be_searched(self):
+        self.church.is_active = False
+        self.church.save()
+
+        response = self.search(self.master)
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_404_NOT_FOUND,
+        )
+
+    def test_nonexistent_church_returns_not_found(self):
+        response = self.search(
+            self.master,
+            church=99999,
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_404_NOT_FOUND,
+        )
+
+    def test_missing_church_parameter_returns_bad_request(self):
+        self.client.force_authenticate(user=self.master)
+
+        response = self.client.get(
+            self.search_url,
+            {"email": "joao"},
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+        )

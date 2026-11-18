@@ -45,3 +45,12 @@ class RegisterSerializer(serializers.ModelSerializer):
             password=password,
             **validated_data
         )
+
+
+class UserSearchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "id", "email", "first_name", "last_name",
+        )
+        read_only_fields = fields

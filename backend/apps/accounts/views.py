@@ -157,7 +157,7 @@ class MyChurchesView(generics.ListAPIView):
         return (
             Church.objects.filter(
                 memberships__user=user,
-                memberships__is_activate=True,
+                memberships__is_active=True,
                 is_active=True,
             )
             .distinct()

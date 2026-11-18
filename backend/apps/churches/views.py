@@ -1,17 +1,23 @@
+from django.db.models import Q
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
 from rest_framework.viewsets import ModelViewSet
 
+from rest_framework.exceptions import PermissionDenied
 from apps.core.permission import (
     IsSystemMaster,
     IsSystemMasterOrChurchAdmin,
 )
 
+from apps.accounts.serializers import UserSearchSerializer
 from .serializers import (
     ChurchSerializer,
     ChurchMembershipSerializer,
 )
 
-from rest_framework.exceptions import PermissionDenied
 from apps.churches.models import Church, ChurchMembership
+from apps.accounts.models import User
 
 
 class ChurchViewSet(ModelViewSet):
@@ -112,3 +118,67 @@ class ChurchMembershipViewSet(ModelViewSet):
                 )
 
         serializer.save()
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="search-users",
+    )
+    def search_users(self, request):
+        """
+        Pesquisa usuários disponíveis para vinculação a uma igreja.
+        """
+
+        user = request.user
+        church_id = request.query_params.get("church")
+        search = request.query_params.get("email", "").strip()
+
+        if not church_id:
+            return Response(
+                {"detail": "Informe o ID da igreja."},
+                status=400,
+            )
+
+        church = Church.objects.filter(
+            id=church_id,
+            is_active=True,
+        ).first()
+
+        if not church:
+            return Response(
+                {"detail": "Igreja não encontrada ou inativa."},
+                status=404,
+            )
+
+        if not user.is_superuser:
+            authorized = ChurchMembership.objects.filter(
+                user=user,
+                church=church,
+                role=ChurchMembership.Role.ADMIN,
+                is_active=True,
+            ).exists()
+
+            if not authorized:
+                raise PermissionDenied(
+                    "Você não tem autorização para pesquisar usuários nesta igreja."
+                )
+
+        if len(search) < 3:
+            return Response([])
+
+        users = (
+            User.objects.filter(is_active=True)
+            .filter(
+                Q(email__icontains=search)
+                | Q(first_name__icontains=search)
+                | Q(last_name__icontains=search)
+            )
+            .exclude(
+                church_memberships__church=church,
+            )
+            .order_by("email")[:20]
+        )
+
+        serializer = UserSearchSerializer(users, many=True)
+
+        return Response(serializer.data)
