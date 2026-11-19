@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Church,
   Plus,
@@ -7,10 +8,11 @@ import {
   Pencil,
   Power,
   X,
+  Users,
 } from "lucide-react";
 
 import { getChurches, createChurch, updateChurch } from "../service";
-import { useFetchList } from "../../../shared/hooks/useFetchList";
+import { useFetchList } from "../../../../shared/hooks/useFetchList";
 
 import type { Church as ChurchType } from "../types";
 
@@ -214,6 +216,13 @@ export const ChurchesPage = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <Link
+                    to={`/igrejas/${church.id}/membros`}
+                    className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted/10"
+                  >
+                    <Users size={15} />
+                    Membros
+                  </Link>
                   <button
                     type="button"
                     onClick={() => openEditModal(church)}

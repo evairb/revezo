@@ -1,10 +1,6 @@
-import { api } from "../../shared/services/api/api";
-
-import type {
-  Church,
-  ChurchPayload,
-  PaginatedResponse,
-} from "./types";
+import { api } from "../../../shared/services/api/api";
+import type { Church, ChurchPayload } from "./types";
+import type { PaginatedResponse } from "../types";
 
 export const getChurches = async (): Promise<PaginatedResponse<Church>> => {
   const response = await api.get<PaginatedResponse<Church>>("/churches/");
