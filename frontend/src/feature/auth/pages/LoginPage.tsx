@@ -1,8 +1,8 @@
-import { Navigate, useNavigate, useLocation } from "react-router-dom";
+import { Link, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useState } from "react";
-import type { LoginCredentials } from "../auth.types";
-import { getAuthErrorMessage } from "../auth.service";
+import type { LoginCredentials } from "../types";
+import { getAuthErrorMessage } from "../service";
 import { LoginForm } from "../components/LoginForm";
 import { ShieldCheck } from "lucide-react";
 
@@ -81,6 +81,15 @@ export const LoginPage = () => {
             isLoading={isSubmitting}
             error={error}
           />
+          <p className="mt-6 text-center text-sm text-muted">
+            Ainda não possui uma conta?{" "}
+            <Link
+              to="/cadastro"
+              className="font-semibold text-primary hover:underline"
+            >
+              Cadastre-se
+            </Link>
+          </p>
         </div>
 
         <p className="mt-7 text-center text-xs text-muted">

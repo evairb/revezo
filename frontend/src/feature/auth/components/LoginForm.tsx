@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import type { LoginCredentials } from "../auth.types";
+import type { LoginCredentials } from "../types";
 import { Eye, EyeOff, LoaderCircle, LockKeyhole, Mail } from "lucide-react";
 
 interface LoginFormProps {

@@ -1,4 +1,6 @@
 from django.db.models import Q
+from django.db import transaction
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -14,6 +16,7 @@ from apps.accounts.serializers import UserSearchSerializer
 from .serializers import (
     ChurchSerializer,
     ChurchMembershipSerializer,
+    ChurchMemberCreateSerializer,
 )
 
 from apps.churches.models import Church, ChurchMembership
@@ -66,10 +69,7 @@ class ChurchMembershipViewSet(ModelViewSet):
             "church",
         )
 
-        if user.is_superuser:
-            return queryset.all()
-
-        else:
+        if not user.is_superuser:
             queryset = queryset.filter(
                 church__memberships__user=user,
                 church__memberships__role=ChurchMembership.Role.ADMIN,
@@ -81,6 +81,16 @@ class ChurchMembershipViewSet(ModelViewSet):
 
         if church_id:
             queryset = queryset.filter(church_id=church_id)
+
+        if self.action == "list":
+            status_filter = self.request.query_params.get("status", "active")
+
+            if status_filter == "active":
+                queryset = queryset.filter(is_active=True)
+            elif status_filter == "inactive":
+                queryset = queryset.filter(is_active=False)
+            elif status_filter != "all":
+                return queryset.none()
 
         return queryset.distinct()
 
@@ -190,3 +200,64 @@ class ChurchMembershipViewSet(ModelViewSet):
         serializer = UserSearchSerializer(users, many=True)
 
         return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="create-member",
+    )
+    def create_member(self, request):
+        """
+        Cria uma nova conta e vincula automaticamente à igreja.
+        """
+
+        serializer = ChurchMemberCreateSerializer(
+            data=request.data,
+            context={"request": request},
+        )
+
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+        church = data["church"]
+        user = request.user
+
+        # Verifica autorização para administrar a igreja.
+        if not user.is_superuser:
+            authorized = ChurchMembership.objects.filter(
+                user=user,
+                church=church,
+                role=ChurchMembership.Role.ADMIN,
+                is_active=True,
+                church__is_active=True,
+            ).exists()
+
+            if not authorized:
+                raise PermissionDenied(
+                    "Você não tem autorização para cadastrar membros nesta igreja."
+                )
+
+        # Cria a conta e o vínculo em uma única transação.
+        with transaction.atomic():
+            new_user = User.objects.create_user(
+                email=data["email"],
+                first_name=data["first_name"],
+                last_name=data["last_name"],
+                password=data["password"],
+            )
+
+            membership = ChurchMembership.objects.create(
+                user=new_user,
+                church=church,
+                role=data["role"],
+            )
+
+        response_serializer = ChurchMembershipSerializer(
+            membership,
+            context={"request": request},
+        )
+
+        return Response(
+            response_serializer.data,
+            status=status.HTTP_201_CREATED,
+        )

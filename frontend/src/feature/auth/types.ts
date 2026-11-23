@@ -15,3 +15,10 @@ export interface AuthUser {
   last_name: string;
   date_joined: string;
 }
+
+export interface RegisterData {
+  email: string;
+  first_name: string;
+  last_name: string;
+  password: string;
+}

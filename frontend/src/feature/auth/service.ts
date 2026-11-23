@@ -8,7 +8,8 @@ import type {
   AuthResponse,
   AuthUser,
   LoginCredentials,
-} from "./auth.types";
+  RegisterData
+} from "./types";
 
 // Obtém o cookie CSRF
 const getCsrfToken = async (): Promise<string> => {
@@ -125,3 +126,14 @@ export const getAuthErrorMessage = (error: unknown): string => {
 
   return "Ocorreu um erro inesperado.";
 };
+
+export const registerUser = async (
+  data:RegisterData
+):Promise<AuthUser> => {
+  const response = await api.post<AuthUser>(
+    "/auth/register/",
+    data
+  );
+
+  return response.data;
+}

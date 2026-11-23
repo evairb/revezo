@@ -1,5 +1,6 @@
 
-import { UserRound } from "lucide-react";
+import { UserRound, ChevronRight } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 
 import type { ChurchMembership } from "../types";
 
@@ -8,12 +9,23 @@ interface MemberItemProps {
 }
 
 export const MemberItem = ({ member }: MemberItemProps) => {
+  const navigate = useNavigate();
+  const { churchId } = useParams();
+
   const formatDate = (date: string) => {
     return new Intl.DateTimeFormat("pt-BR").format(new Date(date));
   };
 
+  const handleClick = () => {
+    navigate(`/igrejas/${churchId}/membros/${member.id}`);
+  };
+
   return (
-    <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+    <button
+      type="button"
+      onClick={handleClick}
+      className="flex w-full flex-col gap-3 p-4 text-left transition-colors hover:bg-muted/5 sm:flex-row sm:items-center sm:justify-between"
+    >
       <div className="flex items-center gap-3">
         <div className="flex size-11 items-center justify-center rounded-full bg-primary/10 text-primary">
           <UserRound size={20} />
@@ -28,7 +40,7 @@ export const MemberItem = ({ member }: MemberItemProps) => {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex items-center justify-between gap-3 sm:justify-end">
         <span
           className={`rounded-full px-3 py-1 text-xs font-medium ${
             member.role === "admin"
@@ -48,7 +60,9 @@ export const MemberItem = ({ member }: MemberItemProps) => {
         >
           {member.is_active ? "Ativo" : "Inativo"}
         </span>
+
+        <ChevronRight size={18} className="text-muted" />
       </div>
-    </div>
+    </button>
   );
 };

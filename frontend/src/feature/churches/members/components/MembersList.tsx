@@ -11,6 +11,7 @@ interface MembersListProps {
   error: string | null;
   onRetry: () => void;
   onAdd: () => void;
+  showAdd: boolean;
 }
 
 export const MembersList = ({
@@ -19,6 +20,7 @@ export const MembersList = ({
   error,
   onRetry,
   onAdd,
+  showAdd,
 }: MembersListProps) => {
   return (
     <div className="rounded-xl border border-border bg-card">
@@ -54,20 +56,26 @@ export const MembersList = ({
           />
 
           <h3 className="font-semibold">
-            Nenhum membro cadastrado
+            {showAdd
+              ? "Nenhum membro cadastrado"
+              : "Nenhum membro inativo"}
           </h3>
 
           <p className="mt-2 text-sm text-muted">
-            Esta igreja ainda não possui membros vinculados.
+            {showAdd
+              ? "Esta igreja ainda não possui membros vinculados."
+              : "Não há membros inativos nesta igreja."}
           </p>
 
-          <button
-            type="button"
-            onClick={onAdd}
-            className="mt-5 rounded-lg bg-primary px-4 py-2 text-white"
-          >
-            Adicionar primeiro membro
-          </button>
+          {showAdd && (
+            <button
+              type="button"
+              onClick={onAdd}
+              className="mt-5 rounded-lg bg-primary px-4 py-2 text-white"
+            >
+              Adicionar primeiro membro
+            </button>
+          )}
         </div>
       ) : (
         <div className="divide-y divide-border">

@@ -113,3 +113,39 @@ class MyChurchSerializer(serializers.ModelSerializer):
         )
 
         return membership.role
+
+
+class ChurchMemberCreateSerializer(serializers.Serializer):
+    church = serializers.PrimaryKeyRelatedField(
+        queryset=Church.objects.filter(is_active=True)
+    )
+
+    first_name = serializers.CharField(max_length=150)
+    last_name = serializers.CharField(max_length=150)
+    email = serializers.EmailField()
+    password = serializers.CharField(
+        write_only=True,
+        min_length=8,
+        style={"input_type": "password"},
+    )
+
+    role = serializers.ChoiceField(
+        choices=ChurchMembership.Role.choices,
+        default=ChurchMembership.Role.MEMBER,
+    )
+
+    def validate_email(self, value):
+        email = value.strip().lower()
+
+        if User.objects.filter(email__iexact=email).exists():
+            raise serializers.ValidationError(
+                """Este e-mail já está cadastrado.
+                Utilize a opção de vincular usuário existente."""
+            )
+        return email
+
+    def validate_first_name(self, value):
+        return value.strip()
+
+    def validate_last_name(self, value):
+        return value.strip()

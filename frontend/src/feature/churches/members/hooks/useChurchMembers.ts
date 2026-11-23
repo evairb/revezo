@@ -8,13 +8,40 @@ import { getChurchMembers } from "../service";
 import type { ChurchMembership } from "../types";
 
 export const useChurchMembers = (churchId: number | null) => {
-  const fetchMembers = useCallback(() => {
+  const fetchActiveMembers = useCallback(() => {
     if (churchId === null) {
       return Promise.resolve([] as ChurchMembership[]);
     }
 
-    return getChurchMembers(churchId);
+    return getChurchMembers(churchId, "active");
   }, [churchId]);
 
-  return useFetchList<ChurchMembership>(fetchMembers);
+  const fetchInactiveMembers = useCallback(() => {
+    if (churchId === null) {
+      return Promise.resolve([] as ChurchMembership[]);
+    }
+
+    return getChurchMembers(churchId, "inactive");
+  }, [churchId]);
+
+  const active = useFetchList<ChurchMembership>(fetchActiveMembers);
+  const inactive = useFetchList<ChurchMembership>(fetchInactiveMembers);
+
+  const refetch = useCallback(() => {
+    active.refetch();
+    inactive.refetch();
+  }, [active.refetch, inactive.refetch]);
+
+  return {
+    activeMembers: active.data,
+    inactiveMembers: inactive.data,
+
+    loadingActive: active.loading,
+    loadingInactive: inactive.loading,
+
+    errorActive: active.error,
+    errorInactive: inactive.error,
+
+    refetch,
+  };
 };

@@ -28,3 +28,12 @@ export interface UserSearchResult {
   first_name: string;
   last_name: string;
 }
+
+export interface ChurchMemberCreatePayload {
+  church: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  password: string;
+  role: ChurchRole;
+}

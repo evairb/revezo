@@ -13,7 +13,7 @@ import {
   logout as authLogout,
   refreshSession,
   getCurrentUser,
-} from "../../feature/auth/auth.service";
+} from "../../feature/auth/service";
 
 import { setSessionExpiredHandler } from "../../shared/services/api/session";
 import { setAccessToken } from "../../shared/services/api/token";
@@ -21,7 +21,7 @@ import { setAccessToken } from "../../shared/services/api/token";
 import type {
   AuthUser,
   LoginCredentials,
-} from "../../feature/auth/auth.types";
+} from "../../feature/auth/types";
 
 interface AuthContextData {
   user: AuthUser | null;

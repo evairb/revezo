@@ -14,11 +14,14 @@ import { AddMemberModal } from "../components/AddMemberModal";
 
 import type { Church } from "../../church/types";
 
+type MemberTab = "active" | "inactive";
+
 export const ChurchMembersPage = () => {
   const { churchId } = useParams();
   const navigate = useNavigate();
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<MemberTab>("active");
 
   const parsedChurchId = Number(churchId);
 
@@ -26,9 +29,12 @@ export const ChurchMembersPage = () => {
     Number.isInteger(parsedChurchId) && parsedChurchId > 0;
 
   const {
-    data: members,
-    loading,
-    error,
+    activeMembers,
+    inactiveMembers,
+    loadingActive,
+    loadingInactive,
+    errorActive,
+    errorInactive,
     refetch,
   } = useChurchMembers(validChurchId ? parsedChurchId : null);
 
@@ -59,18 +65,49 @@ export const ChurchMembersPage = () => {
     );
   }
 
+  const isActiveTab = activeTab === "active";
+
+  const members = isActiveTab ? activeMembers : inactiveMembers;
+  const loading = isActiveTab ? loadingActive : loadingInactive;
+  const error = isActiveTab ? errorActive : errorInactive;
+
   return (
     <div className="space-y-6">
       <MembersHeader
         churchName={church?.name || `Igreja ${parsedChurchId}`}
         loadingChurch={loadingChurches}
-        loadingMembers={loading}
+        loadingMembers={loadingActive || loadingInactive}
         onBack={() => navigate("/igrejas")}
         onRefresh={refetch}
         onAdd={() => setModalOpen(true)}
       />
 
-      <MembersSummary total={members.length} />
+      <MembersSummary total={activeMembers.length} />
+
+      <div className="flex gap-6 border-b border-border">
+        <button
+          type="button"
+          onClick={() => setActiveTab("active")}
+          className={`border-b-2 pb-3 text-sm font-medium transition-colors ${isActiveTab
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+        >
+          Ativos ({activeMembers.length})
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("inactive")}
+          className={`border-b-2 pb-3 text-sm font-medium transition-colors ${!isActiveTab
+            ? "border-primary text-primary"
+            : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+        >
+          Inativos ({inactiveMembers.length})
+        </button>
+      </div>
+
 
       <MembersList
         members={members}
@@ -78,7 +115,9 @@ export const ChurchMembersPage = () => {
         error={error}
         onRetry={refetch}
         onAdd={() => setModalOpen(true)}
+        showAdd={isActiveTab}
       />
+
 
       {modalOpen && (
         <AddMemberModal

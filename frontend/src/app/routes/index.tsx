@@ -10,6 +10,8 @@ import { LoginPage } from "../../feature/auth/pages/LoginPage";
 import { GuestRoute } from "./GuestRoute";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { ChurchMembersPage } from "../../feature/churches/members/page/ChurchMembersPage";
+import { RegisterPage } from "../../feature/auth/pages/RegisterPage";
+import { ChurchMemberDetailsPage } from "../../feature/churches/members/page/ChurchMemberDetailsPage";
 
 
 export const router = createBrowserRouter([
@@ -18,6 +20,7 @@ export const router = createBrowserRouter([
     element: <GuestRoute />,
     children: [
       { path: "/login", element: <LoginPage />, },
+      { path: "/cadastro", element: <RegisterPage /> },
     ],
   },
   // Rotas protegidas
@@ -30,8 +33,13 @@ export const router = createBrowserRouter([
         element: <MainLayout />,
         children: [
           { index: true, element: <DashboardPage />, },
+
           { path: "igrejas", element: <ChurchesPage />, },
-          { path: "igrejas/:churchId/membros", element: <ChurchMembersPage />,},
+          { path: "igrejas/:churchId/membros", element: <ChurchMembersPage />, },
+          {
+            path: "igrejas/:churchId/membros/:memberId",
+            element: <ChurchMemberDetailsPage />,
+          },
 
           { path: "ministerios", element: <MinistriesPage />, },
           { path: "cultos", element: <ServicesPage />, },
