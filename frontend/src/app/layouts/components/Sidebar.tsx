@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   Church,
@@ -8,55 +9,77 @@ import {
   ChevronLeft,
 } from "lucide-react";
 
+import { NavLink } from "react-router-dom";
+import { useChurchContext } from "../../providers/ChurchProvider";
+
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
 }
-import { NavLink } from "react-router-dom";
 
 export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
+  const { churches, activeChurch } = useChurchContext();
+
+  const isMaster = activeChurch?.role === "master";
+  const isChurchAdmin = activeChurch?.role === "admin";
+
+  const canManageChurches = churches.some(
+    (church) => church.role === "master" || church.role === "admin"
+  );
+
+  const canManageChurchStructure = isMaster || isChurchAdmin;
+
   const menuItems = [
     {
       label: "Visão geral",
       icon: LayoutDashboard,
       path: "/",
+      visible: true,
     },
     {
       label: "Igrejas",
       icon: Church,
       path: "/igrejas",
+      visible: canManageChurches,
     },
     {
       label: "Ministérios",
       icon: Users,
       path: "/ministerios",
+      visible: canManageChurchStructure,
     },
     {
       label: "Cultos",
       icon: CalendarDays,
       path: "/cultos",
+      visible: canManageChurchStructure,
     },
     {
       label: "Escalas",
       icon: ClipboardList,
       path: "/escalas",
+      visible: Boolean(activeChurch),
     },
   ];
 
+  const visibleMenuItems = menuItems.filter((item) => item.visible);
+
   return (
     <aside
-      className={`relative flex h-screen flex-col border-r border-border bg-sidebar transiton-all duration 300 ${collapsed ? "w-20" : "w-64"
-        }`}
+      className={`relative flex h-screen flex-col border-r border-border bg-sidebar transition-all duration-300 ${
+        collapsed ? "w-20" : "w-64"
+      }`}
     >
       <div className="flex h-20 items-center justify-between border-b border-border px-5">
         {!collapsed && (
           <div>
-            <h1 className="text-2x1 font-bold tracking-tight text-primary">
+            <h1 className="text-2xl font-bold tracking-tight text-primary">
               Revezo
             </h1>
             <p className="text-xs text-muted">Gestão de escalas</p>
           </div>
         )}
+
         <button
           onClick={onToggle}
           className="rounded-lg p-2 text-muted transition hover:bg-surface hover:text-foreground"
@@ -64,20 +87,21 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         >
           <ChevronLeft
             size={20}
-            className={`transition-transform ${collapsed ? "rotate-180" : ""
-              }`}
+            className={`transition-transform ${
+              collapsed ? "rotate-180" : ""
+            }`}
           />
         </button>
       </div>
 
-      <nav className="flex-1 space-y-2 p-3">
+      <nav className="flex-1 space-y-2 overflow-y-auto p-3">
         {!collapsed && (
           <p className="mb-4 px-3 pt-4 text-xs font-semibold uppercase tracking-wider text-muted">
-            Menu Principa
+            Menu principal
           </p>
         )}
 
-        {menuItems.map((item) => {
+        {visibleMenuItems.map((item) => {
           const Icon = item.icon;
 
           return (
@@ -87,9 +111,10 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
               end={item.path === "/"}
               title={collapsed ? item.label : undefined}
               className={({ isActive }) =>
-                `flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition ${isActive
-                  ? "bg-primary text-white"
-                  : "text-muted hover:bg-surface hover:text-foreground"
+                `flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition ${
+                  isActive
+                    ? "bg-primary text-white"
+                    : "text-muted hover:bg-surface hover:text-foreground"
                 }`
               }
             >
@@ -110,5 +135,5 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         </button>
       </div>
     </aside>
-  )
-}
+  );
+};

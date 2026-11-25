@@ -82,33 +82,33 @@ class MinistryMembershipSerializer(serializers.ModelSerializer):
             "joined_at",
         )
 
-        def validate(self, attrs):
-            user = attrs.get(
-                "user",
-                getattr(self.instance, "user", None),
+    def validate(self, attrs):
+        user = attrs.get(
+            "user",
+            getattr(self.instance, "user", None),
+        )
+
+        ministry = attrs.get(
+            "ministry",
+            getattr(self.instance, "ministry", None),
+        )
+
+        if user and not user.is_active:
+            raise serializers.ValidationError(
+                {"user": "Não é possível vincular um usuário inativo."}
             )
 
-            ministry = attrs.get(
-                "ministry",
-                getattr(self.instance, "ministry", None),
+        if ministry and not ministry.is_active:
+            raise serializers.ValidationError(
+                {"ministry": "Não é possível utilizar um ministério inativo."}
             )
 
-            if user and not user.is_active:
-                raise serializers.ValidationError(
-                    {"user": "Não é possível vincular um usuário inativo."}
-                )
+        if ministry and not ministry.church.is_active:
+            raise serializers.ValidationError(
+                {"ministry": "A igreja deste ministério está inativa."}
+            )
 
-            if ministry and not ministry.is_active:
-                raise serializers.ValidationError(
-                    {"ministry": "Não é possível utilizar um ministério inativo."}
-                )
-
-            if ministry and not ministry.church.is_active:
-                raise serializers.ValidationError(
-                    {"ministry": "A igreja deste ministério está inativa."}
-                )
-
-            return attrs
+        return attrs
 
     def validate_user(self, value):
         if not value.is_active:

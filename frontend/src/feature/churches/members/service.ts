@@ -1,5 +1,6 @@
 import { api } from "../../../shared/services/api/api";
-import type { PaginatedResponse } from "../types";
+import type { PaginatedResponse } from "../../../shared/services/api/api";
+
 import type {
   ChurchMembership,
   ChurchMembershipPayload,

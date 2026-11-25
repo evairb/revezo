@@ -30,20 +30,27 @@ class MinistryViewSet(ModelViewSet):
         user = self.request.user
 
         if user.is_superuser:
-            return Ministry.objects.select_related("church").all()
-
-        return (
-            Ministry.objects.select_related("church")
-            .filter(
-                Q(
-                    church__memberships__user=user,
-                    church__memberships__role=ChurchMembership.Role.ADMIN,
-                    church__memberships__is_active=True,
-                    church__memberships__church__is_active=True,
+            queryset = Ministry.objects.select_related("church").all()
+        else:
+            queryset = (
+                Ministry.objects.select_related("church")
+                .filter(
+                    Q(
+                        church__memberships__user=user,
+                        church__memberships__role=ChurchMembership.Role.ADMIN,
+                        church__memberships__is_active=True,
+                        church__memberships__church__is_active=True,
+                    )
                 )
+                .distinct()
             )
-            .distinct()
-        )
+
+        church_id = self.request.query_params.get("church")
+
+        if church_id:
+            queryset = queryset.filter(church_id=church_id)
+
+        return queryset
 
     def perform_create(self, serializer):
         user = self.request.user

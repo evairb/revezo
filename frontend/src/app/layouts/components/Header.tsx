@@ -1,6 +1,7 @@
 
 import { Bell, LogOut, Menu, Moon, Sun, UserCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { ChurchSelector } from "./ChurchSelector";
 
 import { useTheme } from "../../providers/ThemeProvider";
 import { useAuth } from "../../../feature/auth/hooks/useAuth";
@@ -11,7 +12,7 @@ interface HeaderProps {
 
 export const Header = ({ onMenuToggle }: HeaderProps) => {
   const { theme, toggleTheme } = useTheme();
-  const { logout, user} = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -27,6 +28,7 @@ export const Header = ({ onMenuToggle }: HeaderProps) => {
   return (
     <header className="flex h-20 items-center justify-between border-b border-border bg-surface px-5 lg:px-8">
       <div className="flex items-center gap-3">
+
         <button
           onClick={onMenuToggle}
           className="rounded-lg p-2 text-muted transition hover:bg-sidebar hover:text-foreground lg:hidden"
@@ -41,6 +43,9 @@ export const Header = ({ onMenuToggle }: HeaderProps) => {
             Bem-vindo ao Revezo
           </p>
         </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <ChurchSelector />
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4">

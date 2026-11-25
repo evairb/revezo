@@ -1,14 +1,15 @@
 
 import axios from "axios";
 
-import { api } from "../../shared/services/api/api";
+import { api, type PaginatedResponse } from "../../shared/services/api/api";
 import { setAccessToken } from "../../shared/services/api/token";
 
 import type {
   AuthResponse,
   AuthUser,
   LoginCredentials,
-  RegisterData
+  RegisterData,
+  UserChurch
 } from "./types";
 
 // Obtém o cookie CSRF
@@ -137,3 +138,11 @@ export const registerUser = async (
 
   return response.data;
 }
+
+export const getMyChurches = async (): Promise<UserChurch[]> => {
+  const response = await api.get<PaginatedResponse<UserChurch>>(
+    "/auth/my-churches/"
+  );
+
+  return response.data.results;
+};

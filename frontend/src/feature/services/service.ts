@@ -1,6 +1,6 @@
 
-import { api } from "../../shared/services/api/api";
-import type { PaginatedResponse, Service, ServicePayload } from "./types";
+import { api, type PaginatedResponse } from "../../shared/services/api/api";
+import type { Service, ServicePayload } from "./types";
 
 export const getServices = async (): Promise<PaginatedResponse<Service>> => {
   const response = await api.get<PaginatedResponse<Service>>("/services/");

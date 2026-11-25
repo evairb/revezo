@@ -3,6 +3,7 @@ from rest_framework import serializers
 from apps.accounts.models import User
 
 from .models import Church, ChurchMembership
+from apps.ministries.models import MinistryMembership
 
 
 class ChurchSerializer(serializers.ModelSerializer):
@@ -91,6 +92,8 @@ class ChurchMembershipSerializer(serializers.ModelSerializer):
 
 class MyChurchSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
+    is_ministry_admin = serializers.SerializerMethodField()
+    administered_ministries = serializers.SerializerMethodField()
 
     class Meta:
         model = Church
@@ -98,6 +101,8 @@ class MyChurchSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "role",
+            "is_ministry_admin",
+            "administered_ministries",
         ]
 
     def get_role(self, church):
@@ -113,6 +118,32 @@ class MyChurchSerializer(serializers.ModelSerializer):
         )
 
         return membership.role
+
+    def get_administered_ministries(self, church):
+        user = self.context["request"].user
+
+        if user.is_superuser:
+            return []
+
+        memberships = MinistryMembership.objects.filter(
+            user=user,
+            role=MinistryMembership.Role.ADMIN,
+            is_active=True,
+            ministry__church=church,
+            ministry__is_active=True,
+            ministry__church__is_active=True,
+        ).select_related("ministry")
+
+        return [
+            {
+                "id": membership.ministry.id,
+                "name": membership.ministry.name,
+            }
+            for membership in memberships
+        ]
+
+    def get_is_ministry_admin(self, church):
+        return bool(self.get_administered_ministries(church))
 
 
 class ChurchMemberCreateSerializer(serializers.Serializer):
