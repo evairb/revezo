@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.core.exceptions import ValidationError
 
 
 class Ministry(models.Model):
@@ -41,7 +42,6 @@ class Ministry(models.Model):
 
 
 class MinistryMembership(models.Model):
-
     class Role(models.TextChoices):
         MEMBER = "member", "Membro"
         ADMIN = "admin", "Administrador de Ministério"
@@ -77,6 +77,14 @@ class MinistryMembership(models.Model):
         auto_now_add=True,
     )
 
+    functions = models.ManyToManyField(
+        "MinistryFunction",
+        through="MinistryMembershipFunction",
+        related_name="memberships",
+        blank=True,
+        verbose_name="Funções no ministério",
+    )
+
     class Meta:
         verbose_name = "Vínculo com ministério"
         verbose_name_plural = "Vínculos com ministérios"
@@ -91,3 +99,94 @@ class MinistryMembership(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.ministry.name}"
+
+
+class MinistryFunction(models.Model):
+    ministry = models.ForeignKey(
+        Ministry,
+        on_delete=models.PROTECT,
+        related_name="functions",
+        verbose_name="Ministério",
+    )
+
+    name = models.CharField(
+        "Nome da função",
+        max_length=100,
+    )
+
+    is_active = models.BooleanField(
+        "Função ativa",
+        default=True,
+    )
+
+    created_at = models.DateTimeField(
+        "Data de cadastro",
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        "Última atualização",
+        auto_now=True,
+    )
+
+    class Meta:
+        verbose_name = "Função do ministério"
+        verbose_name_plural = "Funções dos ministérios"
+        ordering = ["ministry__name", "name"]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["ministry", "name"],
+                name="unique_ministry_function_name",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.name} - {self.ministry.name}"
+
+
+class MinistryMembershipFunction(models.Model):
+    membership = models.ForeignKey(
+        MinistryMembership,
+        on_delete=models.PROTECT,
+        related_name="function_assignments",
+        verbose_name="Integrante",
+    )
+
+    function = models.ForeignKey(
+        MinistryFunction,
+        on_delete=models.PROTECT,
+        related_name="member_assignments",
+        verbose_name="Função",
+    )
+
+    assigned_at = models.DateTimeField(
+        "Data da atribuição",
+        auto_now_add=True,
+    )
+
+    class Meta:
+        verbose_name = "Atribuição de função"
+        verbose_name_plural = "Atribuições de funções"
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["membership", "function"],
+                name="unique_membership_function",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+
+        if (
+            self.membership_id
+            and self.function_id
+            and self.membership.ministry_id != self.function.ministry_id
+        ):
+            raise ValidationError(
+                "A função precisa pertencer ao mesmo ministério do integrante."
+            )
+
+    def __str__(self):
+        return f"{self.membership.user.email} - {self.function.name}"

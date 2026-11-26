@@ -12,7 +12,7 @@ import { Link } from "react-router-dom";
 
 import { useMinistries } from "../hooks/useMinistries";
 import { useChurchContext } from "../../../app/providers/ChurchProvider";
-import { MinistryFormModal } from "../components/ministryFormModal";
+import { MinistryFormModal } from "../components/MinistryFormModal";
 import type { Ministry } from "../types";
 
 export const MinistriesPage = () => {

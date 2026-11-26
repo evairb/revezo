@@ -12,6 +12,8 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import { ChurchMembersPage } from "../../feature/churches/members/page/ChurchMembersPage";
 import { RegisterPage } from "../../feature/auth/pages/RegisterPage";
 import { ChurchMemberDetailsPage } from "../../feature/churches/members/page/ChurchMemberDetailsPage";
+import { MinistryMembersPage } from "../../feature/ministries/pages/MinistryMembersPage";
+import { MinistryFunctionsPage } from "../../feature/ministries/pages/MinistryFunctionsPage";
 
 
 export const router = createBrowserRouter([
@@ -42,6 +44,12 @@ export const router = createBrowserRouter([
           },
 
           { path: "ministerios", element: <MinistriesPage />, },
+          { path: "ministerios/:ministryId/membros", element: <MinistryMembersPage /> },
+          {
+            path: "ministerios/:ministryId/funcoes",
+            element: <MinistryFunctionsPage />,
+          },
+
           { path: "cultos", element: <ServicesPage />, },
           { path: "escalas", element: <SchedulesPage />, },
         ]

@@ -1,13 +1,19 @@
+
 import { api, type PaginatedResponse } from "../../shared/services/api/api";
 
-import type { 
+import type {
   Ministry,
   MinistryMembership,
   MinistryPayload,
   MinistryUpdatePayload,
   MinistryMembershipPayload,
-  MinistryMembershipUpdatePayload
+  MinistryMembershipUpdatePayload,
+  MinistryFunction,
+  MinistryFunctionPayload,
+  MinistryFunctionUpdatePayload,
 } from "./types";
+
+// MINISTÉRIOS
 
 export const getMinistries = async (churchId: number) => {
   const response = await api.get<PaginatedResponse<Ministry>>(
@@ -37,11 +43,69 @@ export const updateMinistry = async (
   return response.data;
 };
 
-export const getMinistryMemberships = async (ministryId: number) => {
+// FUNÇÕES DO MINISTÉRIO
+
+export const getMinistryFunctions = async (
+  ministryId: number,
+  status?: "active" | "inactive",
+) => {
+  const response = await api.get<PaginatedResponse<MinistryFunction>>(
+    "/ministries/functions/",
+    {
+      params: {
+        ministry: ministryId,
+        ...(status && { status }),
+      },
+    },
+  );
+
+  return response.data;
+};
+
+export const createMinistryFunction = async (
+  data: MinistryFunctionPayload,
+) => {
+  const response = await api.post<MinistryFunction>(
+    "/ministries/functions/",
+    data,
+  );
+
+  return response.data;
+};
+
+export const updateMinistryFunction = async (
+  functionId: number,
+  data: MinistryFunctionUpdatePayload,
+) => {
+  const response = await api.patch<MinistryFunction>(
+    `/ministries/functions/${functionId}/`,
+    data,
+  );
+
+  return response.data;
+};
+
+export const deleteMinistryFunction = async (functionId: number) => {
+  const response = await api.delete(
+    `/ministries/functions/${functionId}/`,
+  );
+
+  return response.data;
+};
+
+// INTEGRANTES DO MINISTÉRIO
+
+export const getMinistryMemberships = async (
+  ministryId: number,
+  status?: "active" | "inactive",
+) => {
   const response = await api.get<PaginatedResponse<MinistryMembership>>(
     "/ministries/memberships/",
     {
-      params: { ministry: ministryId },
+      params: {
+        ministry: ministryId,
+        ...(status && { status }),
+      },
     },
   );
 

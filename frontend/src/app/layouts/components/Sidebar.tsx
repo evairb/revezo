@@ -23,6 +23,11 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   const isMaster = activeChurch?.role === "master";
   const isChurchAdmin = activeChurch?.role === "admin";
 
+  const administeredMinistries =
+    activeChurch?.administered_ministries ?? [];
+
+  const hasMinistryAdminAccess = administeredMinistries.length > 0;
+
   const canManageChurches = churches.some(
     (church) => church.role === "master" || church.role === "admin"
   );
@@ -123,6 +128,36 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
             </NavLink>
           );
         })}
+
+        {hasMinistryAdminAccess && (
+          <>
+            {!collapsed && (
+              <p className="mb-2 mt-6 px-3 text-xs font-semibold uppercase tracking-wider text-muted">
+                Minhas equipes
+              </p>
+            )}
+
+            {administeredMinistries.map((ministry) => (
+              <NavLink
+                key={ministry.id}
+                to={`/ministerios/${ministry.id}/membros`}
+                title={collapsed ? ministry.name : undefined}
+                className={({ isActive }) =>
+                  `flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition ${
+                    isActive
+                      ? "bg-primary text-white"
+                      : "text-muted hover:bg-surface hover:text-foreground"
+                  }`
+                }
+              >
+                <Users size={20} />
+                {!collapsed && (
+                  <span className="truncate">{ministry.name}</span>
+                )}
+              </NavLink>
+            ))}
+          </>
+        )}
       </nav>
 
       <div className="border-t border-border p-3">
